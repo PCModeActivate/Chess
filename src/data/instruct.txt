@@ -1,0 +1,14 @@
+Instructions
+
+Chess is a two-player game. In this instance of modified chess,
+both players will play on the same computer, and control the
+pieces using the same mouse.
+
+https://en.wikipedia.org/wiki/Chess
+
+Controls:
+    Left click on a piece that is on the current player's side to select it
+    Click on the empty space or another piece, and the piece will be moved there.
+    Click on the same piece again to unselect it
+    Once the piece is moved, pass the mouse to the other player and let them select one of their own pieces.
+    Have fun!
