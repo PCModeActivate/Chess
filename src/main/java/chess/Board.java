@@ -1,6 +1,7 @@
 package main.java.chess;
 
 import main.java.chess.chesspiece.*;
+import main.java.chess.chesspiece.Pieces.Type;
 import main.java.chess.util.*;
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -19,12 +20,12 @@ public class Board extends DrawableElement {
     private boolean changep = false;
 
     public int referenceboard[][] = new int[8][8]; // to check if chess piece exist, if not, int == 0
-    private int cboard[][] = new int[8][8];
+    private int cboard[][] = new int[8][8]; // Temporary Board to used for simulation
     public ArrayList<Pieces> chesspieces = new ArrayList<>(); // Set to null when a piece is taken, default object (not init) is null
-    private ArrayList<Pieces> tpieces = new ArrayList<>();//Temporary arraylist for checking
+    private ArrayList<Pieces> tpieces = new ArrayList<>(); //Temporary arraylist of pieces used in conjunction with cboard
 
     private ArrayList<PImage> drawpieces = new ArrayList<>();
-    static boolean whiteToMove = true; //true is white; false is black
+    static boolean Initiative = true; //true is white; false is black
     static boolean wcl = false; //left side castle
     static boolean wcr = false;
     static boolean bcl = false; //left side castle
@@ -44,7 +45,7 @@ public class Board extends DrawableElement {
 
     public Board(PApplet parent) {
         super(parent);
-        whiteToMove = true;
+        Initiative = true;
         drawpieces.add(parent.loadImage("/chesspieces/PawnL.png"));
         drawpieces.add(parent.loadImage("/chesspieces/PawnL.png"));
         drawpieces.add(parent.loadImage("/chesspieces/BishopL.png"));
@@ -69,12 +70,13 @@ public class Board extends DrawableElement {
         for (int i = 0; i < drawpieces.size(); i++) {
             drawpieces.get(i).resize(drawpieces.get(i).width / 4, drawpieces.get(i).height / 4);
         }
+        initialSetup();
+    }
 
-
+    public void initialSetup(){
         // Hard Code the board entries here
         // loop through 8, to add 16 pawns
-        // Board array: 1 is pawn, 2 is bishop, 3 is horse, 4 is rook, 5 is queen, 9 is
-        // king
+        // Board array: 1 is pawn, 2 is bishop, 3 is horse, 4 is rook, 5 is queen, 9 is king
         chesspieces.add(new Rook(0, 0, true));
         referenceboard[0][0] = 4;
         chesspieces.add(new Rook(7, 0, true));
@@ -149,37 +151,42 @@ public class Board extends DrawableElement {
         wcr = false;
         bcl = false;
         bcr = false;
-        Pieces twk = new King(-1, -1, true);
-        Pieces twlr = new Rook(-1, -1, true);
-        Pieces twrr = new Rook(-1, -1, true);
-        Pieces tbk = new King(-1, -1, false);
-        Pieces tblr = new Rook(-1, -1, false);
-        Pieces tbrr = new Rook(-1, -1, false);
+        boolean twk = false;
+        boolean twlr = false;
+        boolean twrr = false;
+        boolean tbk = false;
+        boolean tblr = false;
+        boolean tbrr = false;
         for (int i = 0; i < chesspieces.size(); i++) {
             if (chesspieces.get(i).side && chesspieces.get(i).type == Pieces.Type.King && !chesspieces.get(i).firstmove) {
-                twk = new King(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side);
-            } else if (!chesspieces.get(i).side && chesspieces.get(i).type == Pieces.Type.King && !chesspieces.get(i).firstmove) {
-                tbk = new King(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side);
-            } else if (chesspieces.get(i).side && chesspieces.get(i).x == 0 && chesspieces.get(i).y == 0 && chesspieces.get(i).type == Pieces.Type.Rook && !chesspieces.get(i).firstmove) {
-                twlr = new Rook(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side);
-            } else if (chesspieces.get(i).side && chesspieces.get(i).x == 7 && chesspieces.get(i).y == 0 && chesspieces.get(i).type == Pieces.Type.Rook && !chesspieces.get(i).firstmove) {
-                twrr = new Rook(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side);
-            } else if (!chesspieces.get(i).side && chesspieces.get(i).x == 0 && chesspieces.get(i).y == 7 && chesspieces.get(i).type == Pieces.Type.Rook && !chesspieces.get(i).firstmove) {
-                tblr = new Rook(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side);
-            } else if (!chesspieces.get(i).side && chesspieces.get(i).x == 7 && chesspieces.get(i).y == 7 && chesspieces.get(i).type == Pieces.Type.Rook && !chesspieces.get(i).firstmove) {
-                tbrr = new Rook(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side);
+                twk = true;
+            }
+            else if (!chesspieces.get(i).side && chesspieces.get(i).type == Pieces.Type.King && !chesspieces.get(i).firstmove) {
+                tbk = true;
+            }
+            else if (chesspieces.get(i).side && chesspieces.get(i).x == 0 && chesspieces.get(i).y == 0 && chesspieces.get(i).type == Pieces.Type.Rook && !chesspieces.get(i).firstmove) {
+                twlr = true;
+            }
+            else if (chesspieces.get(i).side && chesspieces.get(i).x == 7 && chesspieces.get(i).y == 0 && chesspieces.get(i).type == Pieces.Type.Rook && !chesspieces.get(i).firstmove) {
+                twrr = true;
+            }
+            else if (!chesspieces.get(i).side && chesspieces.get(i).x == 0 && chesspieces.get(i).y == 7 && chesspieces.get(i).type == Pieces.Type.Rook && !chesspieces.get(i).firstmove) {
+                tblr = true;
+            }
+            else if (!chesspieces.get(i).side && chesspieces.get(i).x == 7 && chesspieces.get(i).y == 7 && chesspieces.get(i).type == Pieces.Type.Rook && !chesspieces.get(i).firstmove) {
+                tbrr = true;
             }
         }
-        if (twk.x != -1 && twlr.x != -1 && referenceboard[1][0] == 0 && referenceboard[2][0] == 0 && referenceboard[3][0] == 0) {
+        if (twk && twlr && referenceboard[1][0] == 0 && referenceboard[2][0] == 0 && referenceboard[3][0] == 0) {
             wcl = true;
         }
-        if (twk.x != -1 && twrr.x != -1 && referenceboard[5][0] == 0 && referenceboard[6][0] == 0) {
+        if (twk && twrr && referenceboard[5][0] == 0 && referenceboard[6][0] == 0) {
             wcr = true;
         }
-        if (tbk.x != -1 && tblr.x != -1 && referenceboard[1][7] == 0 && referenceboard[2][7] == 0 && referenceboard[3][7] == 0) {
+        if (tbk && tblr && referenceboard[1][7] == 0 && referenceboard[2][7] == 0 && referenceboard[3][7] == 0) {
             bcl = true;
         }
-        if (tbk.x != -1 && tbrr.x != -1 && referenceboard[5][7] == 0 && referenceboard[6][7] == 0) {
+        if (tbk && tbrr && referenceboard[5][7] == 0 && referenceboard[6][7] == 0) {
             bcr = true;
         }
     }
@@ -195,7 +202,7 @@ public class Board extends DrawableElement {
             //aimPiece.CellStatus = Pieces.cellStatus.SELECTED;
             selected = aimPiece;
             selected.CellStatus = Pieces.cellStatus.SELECTED;
-            if (indanger(1, selected)) {
+            if (indanger(true, selected)) {
                 selected.CellStatus = Pieces.cellStatus.CONFLICTED;
                 // then set selected to the currently hovered cell
             }
@@ -204,7 +211,7 @@ public class Board extends DrawableElement {
             selected.CellStatus = Pieces.cellStatus.UNSELECTED;
             selected = tp;
             aimPiece = selected;
-            if (indanger(1, selected)) {
+            if (indanger(true, selected)) {
                 selected.CellStatus = Pieces.cellStatus.CONFLICTED;
             }
             selected.CellStatus = Pieces.cellStatus.CLICKED;
@@ -215,7 +222,7 @@ public class Board extends DrawableElement {
             //System.out.println("Select");
             //      System.out.println("normal hover");
             selected.CellStatus = Pieces.cellStatus.UNSELECTED;
-            if (indanger(1, selected)) {
+            if (indanger(true, selected)) {
                 selected.CellStatus = Pieces.cellStatus.CONFLICTED;
             }
             selected = tp;
@@ -247,14 +254,15 @@ public class Board extends DrawableElement {
         } else if (!selected.side && selected.type == Pieces.Type.Pawn && selected.y == 0) {
             pawntotransform = selected;
             changep = true;
-        } else whiteToMove = !whiteToMove;
+        } else Initiative = !Initiative;
     }
 
-    private boolean indanger(int num, Pieces temp) {
-        if (num == 1) {
+    private boolean indanger(boolean Temp, Pieces temp) {
+        if (Temp) {
+            //Checks the current board if temp
             ArrayList<Coordinate> ta = new ArrayList<>();
             for (int i = 0; i < chesspieces.size(); i++) {
-                if (chesspieces.get(i).side != whiteToMove) {
+                if (chesspieces.get(i).side != Initiative) {
                     ta.clear();
                     ta = av_move(chesspieces, referenceboard, chesspieces.get(i));
                 }
@@ -268,10 +276,12 @@ public class Board extends DrawableElement {
                 }
             }
             return false;
-        } else {
+        } 
+        else {
+            //Checks the simulated board if not temp
             ArrayList<Coordinate> ta = new ArrayList<>();
             for (int i = 0; i < tpieces.size(); i++) {
-                if (tpieces.get(i).side != whiteToMove) {
+                if (tpieces.get(i).side != Initiative) {
                     ta.clear();
                     ta = av_move(tpieces, cboard, tpieces.get(i));
                 }
@@ -332,9 +342,32 @@ public class Board extends DrawableElement {
                 }
             }
         }
-        whiteToMove = !whiteToMove;
+        Initiative = !Initiative;
     }
 
+    public boolean isInCheck (boolean side){
+        //Check by side
+        for (int i = 0; i < chesspieces.size(); i++) {
+            Pieces currentPiece = chesspieces.get(i);
+            if (currentPiece.side == side){    
+                if (indanger(true, currentPiece) && currentPiece.type == Type.King) {
+                    return true;
+                }
+            }
+        }
+        return false;    
+    }
+
+    public boolean isInCheck (Pieces piece){
+        //Check by piece
+       if (indanger(true, piece) && piece.type == Type.King) {
+            return true;
+        }
+        return false;    
+    }
+
+
+    //TBD: divorce ui from simulation in update() in order to simulate ai move & replace human move
 
     @Override
     public void update() {
@@ -345,16 +378,18 @@ public class Board extends DrawableElement {
                 for (int i = 0; i < chesspieces.size(); i++) {
                     //Make sure if anything is in check
                     Pieces currentPiece = chesspieces.get(i);
-                    if (indanger(1, currentPiece) && currentPiece.side == whiteToMove && referenceboard[currentPiece.x][currentPiece.y] % 10 == 9) {
+                    if (isInCheck(currentPiece)) {
                         if (currentPiece.side) wch = true;
                         else bch = true;
                         break;
-                    } else {
+                    } 
+                    else {
                         if (currentPiece.side) wch = false;
                         else bch = false;
                     }
+                    //This is where checking flag setting ends
 
-                    if (selected != currentPiece && !indanger(1, currentPiece))
+                    if (selected != currentPiece && !indanger(true, currentPiece))
                         currentPiece.CellStatus = Pieces.cellStatus.UNSELECTED;
                     else if (selected != currentPiece) currentPiece.CellStatus = Pieces.cellStatus.CONFLICTED;
                     else if (currentPiece.CellStatus != Pieces.cellStatus.CLICKED)
@@ -421,7 +456,7 @@ public class Board extends DrawableElement {
                                     currentPiece = chesspieces.get(index);
                                     //currentPiece is the piece the mouse is hovering over
                                     if (selected.CellStatus == Pieces.cellStatus.CLICKED) {
-                                        if (selected.side == whiteToMove && currentPiece.side != whiteToMove) {
+                                        if (selected.side == Initiative && currentPiece.side != Initiative) {
                                             if (isLegal(selected, i, 7 - j)) {
                                                 if (Input.getMouseButton(Input.Button.LEFT, Input.Event.PRESS)) {
                                                     capturepiece(currentPiece);
@@ -432,14 +467,14 @@ public class Board extends DrawableElement {
                                         }
 
                                         //Unclick the selected piece
-                                        else if (selected.side == whiteToMove && selected.CellStatus == Pieces.cellStatus.CLICKED && currentPiece.side == whiteToMove) {
+                                        else if (selected.side == Initiative && selected.CellStatus == Pieces.cellStatus.CLICKED && currentPiece.side == Initiative) {
                                             //System.out.println("Situation 4");
                                             if (Input.getMouseButton(Input.Button.LEFT, Input.Event.PRESS)) {
                                                 //Unselected the selected cell and select currentpiece
                                                 selectCell(currentPiece);
                                             }
                                         }
-                                    } else if (currentPiece.side == whiteToMove) {
+                                    } else if (currentPiece.side == Initiative) {
                                         //normal select or click over a hovering piece
                                         //System.out.println("Situation 5");
                                         selectCell(currentPiece);
@@ -455,7 +490,7 @@ public class Board extends DrawableElement {
                                     if (selected.CellStatus == Pieces.cellStatus.CLICKED && Input.getMouseButton(Input.Button.LEFT, Input.Event.PRESS)) {
                                         Coordinate tp = new Coordinate(i, 7 - j);
                                         if (isLegal(selected, i, 7 - j)) {
-                                            onemove(selected, tp);
+                                            move(selected, tp, chesspieces, referenceboard);
                                             selected.CellStatus = Pieces.cellStatus.SELECTED;
                                             aimPiece = selected;
                                         }
@@ -477,28 +512,51 @@ public class Board extends DrawableElement {
         }
     }
 
+    public ArrayList<Pieces> clone (ArrayList<Pieces> chesspieces){
+        ArrayList<Pieces> tPieces = new ArrayList<>();
+        for (int i = 0; i < chesspieces.size(); i++) {
+            if (chesspieces.get(i).type == Pieces.Type.King)
+                tPieces.add(new King(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
+            else if (chesspieces.get(i).type == Pieces.Type.Rook)
+                tPieces.add(new Rook(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
+            else if (chesspieces.get(i).type == Pieces.Type.Horse)
+                tPieces.add(new Horse(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
+            else if (chesspieces.get(i).type == Pieces.Type.Queen)
+                tPieces.add(new Queen(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
+            else if (chesspieces.get(i).type == Pieces.Type.Pawn)
+                tPieces.add(new Pawn(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
+            else if (chesspieces.get(i).type == Pieces.Type.Bishop)
+                tPieces.add(new Bishop(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
+        }
+        return tPieces;
+    }
+
+    public int[][] clone (int [][] temp){
+       int [][] tempboard = new int [8][8];
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                tempboard[i][j] = referenceboard[i][j];
+            }
+        }
+        return tempboard;
+    }
+
+    public boolean isLegal (Pieces temp, Coordinate coord){
+        return isLegal (temp, coord.x, coord.y);
+    }
+
     private boolean isLegal(Pieces temp, int a, int b) {
         //This function takes a piece, and a set of coordinates
         //If the set of coordinates is within the piece's moves, then it is legal to move to the coordinates.
         //This function is implemented in the check-for-check function to see if there are any legal moves to get the king out of check
         //This function is also implemented in the update function to ensure that the pieces dont just go everywhere
+        // a = x & b = y for the move coordinate (duh)
         ArrayList<Coordinate> ta = av_move(chesspieces, referenceboard, temp);
         //Brute forces all inputs
         tpieces.clear();
-        for (int i = 0; i < chesspieces.size(); i++) {
-            if (chesspieces.get(i).type == Pieces.Type.King)
-                tpieces.add(new King(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
-            else if (chesspieces.get(i).type == Pieces.Type.Rook)
-                tpieces.add(new Rook(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
-            else if (chesspieces.get(i).type == Pieces.Type.Horse)
-                tpieces.add(new Horse(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
-            else if (chesspieces.get(i).type == Pieces.Type.Queen)
-                tpieces.add(new Queen(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
-            else if (chesspieces.get(i).type == Pieces.Type.Pawn)
-                tpieces.add(new Pawn(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
-            else if (chesspieces.get(i).type == Pieces.Type.Bishop)
-                tpieces.add(new Bishop(chesspieces.get(i).x, chesspieces.get(i).y, chesspieces.get(i).side));
-        }
+
+        //Cloning the chesspiece into tpieces
+        tpieces = clone (chesspieces);
         int movei = -1, capturei = -1, kingi = -1;
         //Sets up some variables to check if this move will leave the king in check
 
@@ -508,13 +566,13 @@ public class Board extends DrawableElement {
                 if (ta.get(0).x == a && ta.get(0).y == b) {
                     //The piece can physically move to this spot
                     for (int i = 0; i < tpieces.size(); i++) {
-                        //Temp.side is the side that we can move, it is also whiteToMove
+                        //Temp.side is the side that we can move, it is also Initiative
                         if (temp.x == tpieces.get(i).x && temp.y == tpieces.get(i).y && temp.side == tpieces.get(i).side) {
                             movei = i;
                         } else if (tpieces.get(i).x == a && tpieces.get(i).y == b && tpieces.get(i).side != temp.side) {
                             capturei = i;
                         }
-                        if (tpieces.get(i).type == Pieces.Type.King && tpieces.get(i).side == whiteToMove) {
+                        if (tpieces.get(i).type == Pieces.Type.King && tpieces.get(i).side == Initiative) {
                             kingi = i;
                         }
                         //Finding the variables
@@ -524,11 +582,8 @@ public class Board extends DrawableElement {
                         Pieces tm = tpieces.get(movei);
                         Pieces tk = tpieces.get(kingi);
                         //Checks to get the locations of the piece that will be moved and the king
-                        for (int i = 0; i < 8; i++) {
-                            for (int j = 0; j < 8; j++) {
-                                cboard[i][j] = referenceboard[i][j];
-                            }
-                        }
+                        //Duplicate referenceboard onto cboard
+                        cboard = clone (referenceboard);
                         cboard[a][b] = cboard[tm.x][tm.y];
                         cboard[tm.x][tm.y] = 0;
                         if (movei == kingi) {
@@ -541,7 +596,7 @@ public class Board extends DrawableElement {
                         if (capturei != -1) {
                             tpieces.remove(capturei);
                         }
-                        if (indanger(2, tk)) {
+                        if (indanger(false, tk)) {
                             return false;
                         }
                         return true;
@@ -555,10 +610,11 @@ public class Board extends DrawableElement {
         return false;
     }
 
+    //Output all available moves of a piece given a board and a piece
     public ArrayList<Coordinate> av_move(ArrayList<Pieces> alist, int rboard[][], Pieces p) {
-        checkCastling();
         ArrayList<Coordinate> av_moves = new ArrayList<Coordinate>();
         if (p.type.equals(Pieces.Type.King)) {
+            checkCastling();
             int tx = p.x;
             int ty = p.y;
             if (tx < 7 && (rboard[p.x + 1][p.y] == 0 || rboard[p.x + 1][p.y] / 10 != rboard[p.x][p.y] / 10)) {
@@ -778,6 +834,7 @@ public class Board extends DrawableElement {
         }
 
         if (p.type.equals(Pieces.Type.Rook)) {
+            checkCastling();
             int tx = p.x;
             int ty = p.y;
             while (tx < 7 && rboard[tx + 1][ty] == 0) {
@@ -922,7 +979,14 @@ public class Board extends DrawableElement {
         return av_moves;
     }
 
-    public void onemove(Pieces p, Coordinate newcoord) {
+    /**
+     * A fully OOB-fied move that actually modifies the input parameter (kinda) to make a move
+     * @param p
+     * @param newcoord
+     * @param chesspieces
+     * @param referenceboard
+     */    
+    public void move(Pieces p, Coordinate newcoord, ArrayList<Pieces> chesspieces, int [][] referenceboard) {
         if (p.type.equals(Pieces.Type.King)) {
             checkCastling();
             p.firstmove = true;
@@ -1185,18 +1249,39 @@ public class Board extends DrawableElement {
                 referenceboard[p.x][p.y] = 11;
             }
         }
-        whiteToMove = !whiteToMove;
+        Initiative = !Initiative;
+    }
+
+    /**
+     * Get all possible moves for a specific side, returns an arraylist of moves
+     * @param alist
+     * @param rboard
+     * @param side
+     * @return 
+     */
+    public ArrayList<Move> allMoves(ArrayList<Pieces> alist, int rboard[][], boolean side){
+        ArrayList<Move> allmoves = new ArrayList<Move>();
+        for (int i=0; i<alist.size(); i++){
+            if (alist.get(i).side == side){ //If same side
+                ArrayList<Coordinate> moveofpiece = av_move(alist, rboard, alist.get(i));
+                for (int j=0; j<moveofpiece.size(); j++){
+                    allmoves.add(new Move(alist.get(i),moveofpiece.get(j)));
+                }
+            }
+        }
+        return allmoves;
     }
 
     @Override
     public void draw() {
         parent.fill(DualColours.getColour(3));
-        if (whiteToMove) parent.text("White's Turn", 720, 69);
-        else parent.text("Black's Turn", 720, 69);
+        if (Initiative) parent.text("White's Turn", 600, 69);
+        else parent.text("Black's Turn", 600, 69);
 
         if (changep) {
             parent.textSize(26);
-            parent.text("Please enter a \ncharacter for \npawn transformation", 640, 169);
+            parent.text("Please enter a \ncharacter for \npawn transformation", 600, 150);
+            parent.text("Q for queen;\nK for knight;\nB for bishop;\nR for rook.", 600, 300);
             parent.textSize(21);
         }
 
